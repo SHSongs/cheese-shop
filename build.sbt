@@ -1,4 +1,5 @@
-val scala3Version = "3.3.0"
+ThisBuild / version := "0.1.0-SNAPSHOT"
+ThisBuild / scalaVersion := "2.13.8"
 
 val zioVersion = "2.0.15"
 
@@ -13,8 +14,5 @@ lazy val sharedSettings = Seq(
 lazy val root = project
   .in(file("."))
   .settings(
-    name := "cheese-shop",
-    version := "0.1.0-SNAPSHOT",
-    scalaVersion := scala3Version,
-    libraryDependencies += "org.scalameta" %% "munit" % "0.7.29" % Test
+    name := "cheese-shop"
   )
