@@ -16,3 +16,6 @@ lazy val root = project
   .settings(
     name := "cheese-shop"
   )
+
+lazy val `cheese-shop` = project
+  .settings(sharedSettings)
