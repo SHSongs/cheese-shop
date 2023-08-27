@@ -14,6 +14,7 @@ object UserService {
       case "2" => pay(user)
       case "3" => writeReview(user)
       case "4" => readReview()
+      case _ => zio.Console.printLine("잘못된 입력입니다. 프로그램을 종료합니다.")
     }
   } yield ()
 

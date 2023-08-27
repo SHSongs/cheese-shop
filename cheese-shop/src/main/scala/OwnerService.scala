@@ -12,6 +12,7 @@ object OwnerService {
       case "1" => readReservation()
       case "2" => close()
       case "3" => readReview()
+      case _ => zio.Console.printLine("잘못된 입력입니다. 프로그램을 종료합니다.")
     }
   } yield ()
 

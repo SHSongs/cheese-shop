@@ -10,11 +10,11 @@ object Main extends ZIOAppDefault {
   } yield userType
 
   override def run: ZIO[Any with ZIOAppArgs with Scope, IOException, Unit] = for {
-    _ <- ZIO.unit
     userType <- inputType
     _ <- userType match {
       case "1" => OwnerService.run()
       case "2" => UserService.run()
+      case _ => zio.Console.printLine("잘못된 입력입니다. 프로그램을 종료합니다.")
     }
   } yield ()
 }
