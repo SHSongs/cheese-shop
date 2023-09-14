@@ -7,8 +7,12 @@ lazy val sharedSettings = Seq(
   libraryDependencies ++= Seq(
     "dev.zio" %% "zio" % zioVersion,
     "dev.zio" %% "zio-test" % zioVersion % Test,
-    "dev.zio" %% "zio-test-sbt" % zioVersion % Test
-  )
+    "dev.zio" %% "zio-test-sbt" % zioVersion % Test,
+    "dev.zio" %% "zio-config" % "4.0.0-RC14",
+    "dev.zio" %% "zio-config-typesafe" % "4.0.0-RC14",
+    "dev.zio" %% "zio-config-magnolia" % "4.0.0-RC14",
+    "dev.zio" %% "zio-config-refined" % "4.0.0-RC14"
+)
 )
 
 lazy val root = project
