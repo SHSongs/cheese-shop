@@ -9,7 +9,7 @@ object Main extends ZIOAppDefault {
     userType <- zio.Console.readLine("사용자 유형을 선택하세요: ")
   } yield userType
 
-  override def run: ZIO[Any with ZIOAppArgs with Scope, IOException, Unit] = for {
+  override def run: ZIO[Any with ZIOAppArgs with Scope, Exception, Unit] = for {
     userType <- inputType
     _ <- userType match {
       case "1" => OwnerService.run()

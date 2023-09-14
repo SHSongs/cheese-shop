@@ -1,11 +1,14 @@
-import zio.ZIO
+import zio._
+import zio.config.typesafe.TypesafeConfigProvider
 
 import java.io.IOException
 
 object UserService {
-  def run(): ZIO[Any, IOException, Unit] = userProg()
-
-  private def userProg(): ZIO[Any, IOException, Unit] = for {
+  def run(): ZIO[Any, Exception, Unit] = userProg()
+  val bootstrap: ZLayer[ZIOAppArgs, Any, Any] = Runtime.setConfigProvider(
+    TypesafeConfigProvider.fromResourcePath()
+  )
+  private def userProg(): ZIO[Any, Exception, Unit] = for {
     _ <- zio.Console.printLine("손님 프로그램입니다.")
     user <- login()
     menu <- inputMenu()
@@ -19,6 +22,9 @@ object UserService {
   } yield ()
 
   private def login() = for {
+    _ <- ZIO.config[UserConfig](UserConfig.config).flatMap {
+      config => Console.printLine(s"${config.name} ${config.phone}")
+    }
     name <- zio.Console.readLine("이름: ")
     phone <- zio.Console.readLine("휴대전화번호: ")
   } yield User(name, phone)
@@ -47,7 +53,7 @@ object UserService {
     _ <- zio.Console.printLine("예약 완료.")
   } yield ()
 
-  private def pay(user: User) = for {
+  def pay(user: User) = for {
     _ <- zio.Console.printLine(s"$user 의 종료된 예약을 DB에서 가져옵니다...")
     choice <- zio.Console.readLine("결제할 예약을 선택하세요: ")
     _ <- zio.Console.printLine(s"DB에서 $user 가 $choice 결제 처리를 합니다...")
