@@ -1,4 +1,3 @@
-import zio.config._
 import zio.Config
 import zio.config.magnolia.deriveConfig
 

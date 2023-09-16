@@ -5,9 +5,11 @@ import java.io.IOException
 
 object UserService {
   def run(): ZIO[Any, Exception, Unit] = userProg()
+
   val bootstrap: ZLayer[ZIOAppArgs, Any, Any] = Runtime.setConfigProvider(
     TypesafeConfigProvider.fromResourcePath()
   )
+
   private def userProg(): ZIO[Any, Exception, Unit] = for {
     _ <- zio.Console.printLine("손님 프로그램입니다.")
     user <- login()
@@ -63,7 +65,7 @@ object UserService {
   private def writeReview(user: User) = for {
     _ <- zio.Console.printLine("$user 의 결제된 && 리뷰 작성되지 않은 예약을 DB에서 가져옵니다...")
     choice <- zio.Console.readLine("리뷰를 작성할 예약을 선택하세요: ")
-    reservation_id = 1  // 예약 아이디
+    reservation_id = 1 // 예약 아이디
     score <- zio.Console.readLine("별점을 입력해주세요 (0~5): ")
     content <- zio.Console.readLine("리뷰를 남겨주세요: ")
     review = Review(reservation_id, score, content)
