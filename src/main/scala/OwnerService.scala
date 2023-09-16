@@ -1,5 +1,4 @@
-import zio.ZIO
-
+import zio._
 import java.io.IOException
 
 object OwnerService {
