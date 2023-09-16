@@ -11,7 +11,13 @@ lazy val sharedSettings = Seq(
     "dev.zio" %% "zio-config" % "4.0.0-RC14",
     "dev.zio" %% "zio-config-typesafe" % "4.0.0-RC14",
     "dev.zio" %% "zio-config-magnolia" % "4.0.0-RC14",
-    "dev.zio" %% "zio-config-refined" % "4.0.0-RC14"
+    "dev.zio" %% "zio-config-refined" % "4.0.0-RC14",
+    "dev.zio" %% "zio-http" % "3.0.0-RC2",
+    "dev.zio" %% "zio-json" % "0.6.0",
+    "com.lihaoyi" %% "ujson" % "3.0.0",
+    "com.softwaremill.sttp.client3" %% "core" % "3.8.16",
+    "com.softwaremill.sttp.client3" %% "zio-json" % "3.8.16",
+    "com.softwaremill.sttp.client3" %% "zio" % "3.8.16"
 )
 )
 
