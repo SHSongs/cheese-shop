@@ -41,3 +41,6 @@ bin/
 
 # general
 *.class
+
+# file data
+/src/resources/
