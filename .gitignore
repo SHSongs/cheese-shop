@@ -40,4 +40,7 @@ bin/
 .cache-main
 
 # general
-*.class
+*.class가
+
+# file data
+/src/resources/
