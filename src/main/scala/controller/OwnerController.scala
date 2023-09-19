@@ -19,5 +19,10 @@ object OwnerController {
         data <- OwnerService.closeReservation(Integer.parseInt(reservationId))
         res <- ZIO.succeed(Response.json(data.toJson))
       } yield res
+      case Method.GET -> Root / "owner" / "reviews" => for {
+        _ <- zio.Console.printLine(s"/owner/reviews endpoint!")
+        reviews <- OwnerService.getReviews()
+        res <- ZIO.succeed(Response.json(reviews.toJson))
+      } yield res
     }
 }
