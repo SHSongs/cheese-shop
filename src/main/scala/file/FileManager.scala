@@ -1,28 +1,25 @@
 package file
 
 import zio._
-import ujson._
+import zio.json.{DecoderOps, EncoderOps, JsonDecoder, JsonEncoder}
 
 object FileManager {
+
   val path = os.pwd / "src" / "resources"
 
-  def readJson(fileName: String) = for {
-    json <- ZIO
-      .attempt(ujson.read(os.read(path / fileName)).obj.get("data").get)
-      .catchAll(cause => ZIO.fail(s"Read Fail: ${cause}"))
-  } yield json
+  def readJson[A: JsonDecoder](fileName: String) = for {
+    file <- ZIO
+      .attempt(ujson.read(os.read(path / fileName)))
+      .catchAll(cause => ZIO.fail(s"File Read Fail: ${cause}"))
+    list <- ZIO
+      .fromEither(file.toString().fromJson[List[A]])
+  } yield list
 
-  def writeJson(fileName: String, contents: Value) = for {
+  def writeJson[A: JsonEncoder](fileName: String, contents: List[A]) = for {
     _ <- ZIO.unit
     filePath = path / fileName
-    existingContents <- readJson(fileName).orElse(ZIO.succeed(Arr()))
-    updatedContents: Arr = existingContents match {
-      case arr: Arr => arr.arr :+ contents
-      case _ => Arr(contents)
-    }
-    jsonContents = ujson.Obj("data" -> updatedContents)
     _ <- ZIO
-      .attempt(os.write.over(filePath, jsonContents))
+      .attempt(os.write.over(filePath, contents.toJson))
       .catchAll(cause => ZIO.fail(s"Write Fail: ${cause}"))
   } yield ()
 }
