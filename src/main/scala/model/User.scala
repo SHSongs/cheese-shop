@@ -1,3 +1,5 @@
+package model
+
 import zio.json.{DeriveJsonCodec, JsonCodec}
 
 case class User(name: String,
