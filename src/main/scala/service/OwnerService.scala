@@ -1,10 +1,10 @@
 package service
 
-import zio._
-import java.io.IOException
+import file.FileManager
+import model.Reservation
 
 object OwnerService {
-  def run(): ZIO[Any, IOException, Unit] = userProg()
+  def run() = userProg()
 
   private def userProg() = for {
     _ <- zio.Console.printLine("사장님 프로그램입니다.")
@@ -37,13 +37,26 @@ object OwnerService {
     _ <- zio.Console.printLine("전체 리뷰 목록을 가져옵니다...")
   } yield ()
 
+  def getReservations() = for {
+    reservations <- FileManager.readJson[Reservation]("reservation.json")
+    _ <- zio.Console.printLine(reservations)
+  } yield reservations
+
   private def printReservations() = for {
-    _ <- zio.Console.printLine("DB에서 예약 목록을 불러와서 출력합니다 ..")
+    reservations <- getReservations()
+    _ <- zio.Console.printLine(reservations)
   } yield ()
 
   private def closeReservation() = for {
+    reservations <- getReservations()
     target <- zio.Console.readLine("종료할 예약을 선택하세요 : ")
-    _ <- zio.Console.printLine("DB에서 예약을 종료 상태로 변경합니다 ..")
-    _ <- zio.Console.printLine(s"$target 예약이 종료되었습니다.")
+    changed = reservations.map { reservation =>
+      if (Integer.parseInt(target) == reservation.id) {
+        reservation.close()
+      } else {
+        reservation
+      }
+    }
+    _ <- FileManager.writeJson("reservation.json", changed)
   } yield ()
 }
