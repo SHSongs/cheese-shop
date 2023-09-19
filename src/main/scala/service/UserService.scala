@@ -1,5 +1,8 @@
-import zio._
+package service
+
+import model.{Reservation, Review, User}
 import zio.config.typesafe.TypesafeConfigProvider
+import zio.{Console, Runtime, ZIO, ZIOAppArgs, ZLayer}
 
 import java.io.IOException
 
@@ -24,9 +27,6 @@ object UserService {
   } yield ()
 
   private def login() = for {
-    _ <- ZIO.config[UserConfig](UserConfig.config).flatMap {
-      config => Console.printLine(s"${config.name} ${config.phone}")
-    }
     name <- zio.Console.readLine("이름: ")
     phone <- zio.Console.readLine("휴대전화번호: ")
   } yield User(name, phone)
