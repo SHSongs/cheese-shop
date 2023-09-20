@@ -1,4 +1,4 @@
-import controller.SampleController
+import controller._
 import zio._
 import zio.http._
 
@@ -13,7 +13,7 @@ object Main extends ZIOAppDefault {
         } yield res
     }
 
-  val apps = SampleController() ++ app  // 여기에 Controller 추가
+  val apps = OwnerController() ++ SampleController() ++ app
 
   override val run =
     Server
