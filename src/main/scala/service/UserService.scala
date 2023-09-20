@@ -8,6 +8,8 @@ import file.FileManager
 
 object UserService {
   // 생각보다 하나의 서비스에서 여러 가지 파일을 읽을 일이 많은 것 같습니다
+
+  // ---- V 파일 접근 코드 V ----
   private def getReservations() = for {
     reservations <- FileManager.readJson[Reservation](
       FileManager.FILE_RESERVATION
@@ -50,7 +52,25 @@ object UserService {
     _ <- FileManager.writeJson(FileManager.FILE_REVIEW, nextReviews)
   } yield ()
 
-  // -------------
+  // ---- V 단순 매핑 코드 V ----
+
+  private def getClosedReservationsOfUser(user: User) = for {
+    reservations <- getReservations()
+
+    closedReservationsOfUser = reservations
+      .filter(_.user == user)
+      .filter(_.isClosed)
+  } yield closedReservationsOfUser
+
+  private def getPaidButNotReviewedReservationsOfUser(user: User) = for {
+    reservations <- getReservations()
+    paidReservationsOfUser = reservations
+      .filter(_.user == user)
+      .filter(_.isPaied)
+
+  } yield paidReservationsOfUser
+
+  // ---- V 외부 공개 코드 V ----
 
   def login(name: String, phone: String) = for {
     users <- getExistingUsers()
@@ -81,14 +101,6 @@ object UserService {
 
   } yield reservation
 
-  def getClosedReservationsOfUser(user: User) = for {
-    reservations <- getReservations()
-
-    closedReservationsOfUser = reservations
-      .filter(_.user == user)
-      .filter(_.isClosed)
-  } yield closedReservationsOfUser
-
   def pay(reservationId: Int) = for {
     reservations <- getReservations()
 
@@ -102,14 +114,6 @@ object UserService {
     result <- ZIO.attempt(changed.head)
 
   } yield result
-
-  def getPaidButNotReviewedReservationsOfUser(user: User) = for {
-    reservations <- getReservations()
-    paidReservationsOfUser = reservations
-      .filter(_.user == user)
-      .filter(_.isPaied)
-
-  } yield paidReservationsOfUser
 
   private def writeReview(reservationId: Int, point: Int, content: String) =
     for {
