@@ -7,14 +7,11 @@ import java.io.IOException
 import file.FileManager
 
 object UserService {
-  // 파일 관련 상수들은 FileManager 객체에 있어야 하지 않을지?
-  private val FILE_RESERVATION = "reservation.json"
-  private val FILE_USER = "user.json"
-  private val FILE_REVIEW = "review.json"
-
   // 생각보다 하나의 서비스에서 여러 가지 파일을 읽을 일이 많은 것 같습니다
   private def getReservations() = for {
-    reservations <- FileManager.readJson[Reservation](FILE_RESERVATION)
+    reservations <- FileManager.readJson[Reservation](
+      FileManager.FILE_RESERVATION
+    )
   } yield reservations
 
   private def addReservation(reservation: Reservation) = for {
@@ -22,15 +19,15 @@ object UserService {
 
     nextReservations = reservations.appended(reservation)
 
-    _ <- FileManager.writeJson(FILE_RESERVATION, nextReservations)
+    _ <- FileManager.writeJson(FileManager.FILE_RESERVATION, nextReservations)
   } yield ()
 
   private def saveReservations(reservations: List[Reservation]) = for {
-    _ <- FileManager.writeJson(FILE_RESERVATION, reservations)
+    _ <- FileManager.writeJson(FileManager.FILE_RESERVATION, reservations)
   } yield ()
 
   private def getExistingUsers() = for {
-    users <- FileManager.readJson[ExistingUser](FILE_USER)
+    users <- FileManager.readJson[ExistingUser](FileManager.FILE_USER)
   } yield users
 
   private def addUser(user: NewUser) = for {
@@ -38,11 +35,11 @@ object UserService {
 
     nextUsers = users.appended(ExistingUser(user.name, user.phone))
 
-    _ <- FileManager.writeJson(FILE_USER, nextUsers)
+    _ <- FileManager.writeJson(FileManager.FILE_USER, nextUsers)
   } yield ()
 
   private def getReviews() = for {
-    reviews <- FileManager.readJson[Review](FILE_REVIEW)
+    reviews <- FileManager.readJson[Review](FileManager.FILE_REVIEW)
   } yield reviews
 
   private def addReview(review: Review) = for {
@@ -50,7 +47,7 @@ object UserService {
 
     nextReviews = reviews.appended(review)
 
-    _ <- FileManager.writeJson(FILE_REVIEW, nextReviews)
+    _ <- FileManager.writeJson(FileManager.FILE_REVIEW, nextReviews)
   } yield ()
 
   // -------------
