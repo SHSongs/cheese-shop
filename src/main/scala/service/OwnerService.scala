@@ -1,12 +1,10 @@
 package service
 
 import file.FileManager
+import file.FileManager._
 import model._
 
 object OwnerService {
-  private val FILE_RESERVATION = "reservation.json"
-  private val FILE_REVIEW = "review.json"
-
   def getReservations() = for {
     reservations <- FileManager.readJson[Reservation](FILE_RESERVATION)
   } yield reservations
