@@ -66,8 +66,7 @@ object UserService {
       user: User,
       date: String,
       time: String,
-      // 인원수는 정수형이어야 하지 않을지?
-      guestCount: String
+      guestCount: Int
   ) = for {
     // ID 생성을 어디서 해야 할지?
     uuid <- Random.nextInt
@@ -112,8 +111,7 @@ object UserService {
 
   } yield paidReservationsOfUser
 
-  // point는 정수형이어야 하지 않을지?
-  private def writeReview(reservationId: Int, point: String, content: String) =
+  private def writeReview(reservationId: Int, point: Int, content: String) =
     for {
       _ <- ZIO.unit
       review = Review(reservationId, point, content)
