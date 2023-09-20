@@ -5,6 +5,9 @@ import zio.json.{DecoderOps, EncoderOps, JsonDecoder, JsonEncoder}
 
 object FileManager {
 
+  val FILE_RESERVATION = "reservation.json"
+  val FILE_REVIEW = "review.json"
+
   val path = os.pwd / "src" / "resources"
 
   def readJson[A: JsonDecoder](fileName: String) = for {
