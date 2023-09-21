@@ -1,19 +1,18 @@
 package service
 
-import model.{Reservation, Review, User, ExistingUser, NewUser}
 import zio._
 
-import java.io.IOException
-import file.FileManager
+import file._
+import file.FileManager._
+
+import model._
 
 object UserService {
   // 생각보다 하나의 서비스에서 여러 가지 파일을 읽을 일이 많은 것 같습니다
 
   // ---- V 파일 접근 코드 V ----
   private def getReservations() = for {
-    reservations <- FileManager.readJson[Reservation](
-      FileManager.FILE_RESERVATION
-    )
+    reservations <- FileManager.readJson[Reservation](FILE_RESERVATION)
   } yield reservations
 
   private def addReservation(reservation: Reservation) = for {
@@ -21,15 +20,15 @@ object UserService {
 
     nextReservations = reservations.appended(reservation)
 
-    _ <- FileManager.writeJson(FileManager.FILE_RESERVATION, nextReservations)
+    _ <- FileManager.writeJson(FILE_RESERVATION, nextReservations)
   } yield ()
 
   private def saveReservations(reservations: List[Reservation]) = for {
-    _ <- FileManager.writeJson(FileManager.FILE_RESERVATION, reservations)
+    _ <- FileManager.writeJson(FILE_RESERVATION, reservations)
   } yield ()
 
   private def getExistingUsers() = for {
-    users <- FileManager.readJson[ExistingUser](FileManager.FILE_USER)
+    users <- FileManager.readJson[ExistingUser](FILE_USER)
   } yield users
 
   private def addUser(user: NewUser) = for {
@@ -37,11 +36,11 @@ object UserService {
 
     nextUsers = users.appended(ExistingUser(user.name, user.phone))
 
-    _ <- FileManager.writeJson(FileManager.FILE_USER, nextUsers)
+    _ <- FileManager.writeJson(FILE_USER, nextUsers)
   } yield ()
 
   private def getReviews() = for {
-    reviews <- FileManager.readJson[Review](FileManager.FILE_REVIEW)
+    reviews <- FileManager.readJson[Review](FILE_REVIEW)
   } yield reviews
 
   private def addReview(review: Review) = for {
@@ -49,7 +48,7 @@ object UserService {
 
     nextReviews = reviews.appended(review)
 
-    _ <- FileManager.writeJson(FileManager.FILE_REVIEW, nextReviews)
+    _ <- FileManager.writeJson(FILE_REVIEW, nextReviews)
   } yield ()
 
   // ---- V 단순 매핑 코드 V ----
@@ -72,12 +71,34 @@ object UserService {
 
   // ---- V 외부 공개 코드 V ----
 
-  def login(name: String, phone: String) = for {
+  def login(userData: Either[String, (String, String)]) = for {
     users <- getExistingUsers()
 
-    result = users.contains(ExistingUser(name, phone)) match {
-      case true  => ExistingUser(name, phone)
-      case false => NewUser(name, phone)
+    result <- userData match {
+      case Left(error) => ZIO.left(error)
+      case Right(data) =>
+        ZIO.right(
+          users.contains(ExistingUser(data._1, data._2)) match {
+            case true  => ExistingUser(data._1, data._2)
+            case false => NewUser(data._1, data._2)
+          }
+        )
+    }
+
+  } yield result
+
+  def findReservationsByUser(user: User) = for {
+    users <- getExistingUsers()
+    reviews <- getReviews()
+
+    _ <- Console.printLine(reviews)
+
+    reservations <- getReservations()
+
+    result <- user match {
+      case ExistingUser(name, phone) =>
+        ZIO.right(reservations.filter(_.user == user))
+      case NewUser(name, phone) => ZIO.left("기존 예약이 없는 사용자입니다.")
     }
 
   } yield result
