@@ -27,14 +27,14 @@ object UserService {
     _ <- FileManager.writeJson(FILE_RESERVATION, reservations)
   } yield ()
 
-  private def getExistingUsers() = for {
-    users <- FileManager.readJson[ExistingUser](FILE_USER)
+  private def getUsers() = for {
+    users <- FileManager.readJson[User](FILE_USER)
   } yield users
 
-  private def addUser(user: NewUser) = for {
-    users <- getExistingUsers()
+  private def addUser(user: User) = for {
+    users <- getUsers()
 
-    nextUsers = users.appended(ExistingUser(user.name, user.phone))
+    nextUsers = users.appended(User(user.name, user.phone))
 
     _ <- FileManager.writeJson(FILE_USER, nextUsers)
   } yield ()
@@ -52,6 +52,10 @@ object UserService {
   } yield ()
 
   // ---- V 단순 매핑 코드 V ----
+
+  private def doesUserExists(user: User) = for {
+    users <- getUsers()
+  } yield users.contains(user)
 
   private def getClosedReservationsOfUser(user: User) = for {
     reservations <- getReservations()
@@ -71,54 +75,28 @@ object UserService {
 
   // ---- V 외부 공개 코드 V ----
 
-  def login(userData: Either[String, (String, String)]) = for {
-    users <- getExistingUsers()
-
-    result <- userData match {
-      case Left(error) => ZIO.left(error)
-      case Right(data) =>
-        ZIO.right(
-          users.contains(ExistingUser(data._1, data._2)) match {
-            case true  => ExistingUser(data._1, data._2)
-            case false => NewUser(data._1, data._2)
-          }
-        )
-    }
-
-  } yield result
-
-  def findReservationsByUser(user: User) = for {
-    users <- getExistingUsers()
-    reviews <- getReviews()
-
-    _ <- Console.printLine(reviews)
-
+  def findReservationsByUser(user: Either[String, User]) = for {
+    users <- getUsers()
     reservations <- getReservations()
 
     result <- user match {
-      case ExistingUser(name, phone) =>
-        ZIO.right(reservations.filter(_.user == user))
-      case NewUser(name, phone) => ZIO.left("기존 예약이 없는 사용자입니다.")
+      case Left(error) => ZIO.left(error)
+      case Right(data) =>
+        ZIO.right(reservations.filter(reservation => reservation.user == data))
     }
-
   } yield result
 
+  // TODO: UUID 생성 관련 코드가 작성되고 나서 수정 예정
   def makeReservation(
       user: User,
       date: String,
       time: String,
       guestCount: Int
   ) = for {
-    // ID 생성을 어디서 해야 할지?
     uuid <- Random.nextInt
     reservation = Reservation(uuid, user, date, time, guestCount)
 
     _ <- addReservation(reservation)
-
-    _ <- user match {
-      case ExistingUser(name, phone) => ZIO.unit
-      case newUser: NewUser          => addUser(newUser)
-    }
 
   } yield reservation
 

@@ -9,87 +9,49 @@ import model._
 
 object UserController {
   def apply() = Http.collectZIO[Request] {
-    case req @ (Method.GET -> Root / "user") =>
+    case req @ (Method.GET -> Root / "user" / "reservations") =>
       for {
-        _ <- Console.printLine("/user endpoint!")
+        _ <- Console.printLine("/user/reservations endpoint!")
         queryParams = req.url.queryParams
 
-        user <- login(queryParams)
+        userData = queryParams.isEmpty match {
+          case true  => Left("회원 정보를 입력해주세요.")
+          case false => Right(queryParams)
+        }
 
-        response <- user match {
-          case Left(error) =>
-            ZIO.succeed(BadRequestResponse(error))
-          case Right(value) =>
-            ZIO.succeed(value match {
-              case ExistingUser(name, _) => Response.json(value.toJson)
-              case NewUser(name, _)      => Response.json(value.toJson)
-            })
+        user = parseUserData(userData)
+
+        result <- UserService.findReservationsByUser(user)
+
+        response <- result match {
+          case Left(error)  => ZIO.succeed(BadRequestResponse(error))
+          case Right(value) => ZIO.succeed(Response.json(value.toJson))
         }
 
       } yield response
-
-    // case req @ (Method.GET -> Root / "user" / "reservations") =>
-    //   for {
-    //     _ <- Console.printLine("/user/reservations endpoint!")
-    //     queryParams = req.url.queryParams
-
-    //     user <- login(queryParams)
-
-    //     response <- user match {
-    //       case Left(error) => ZIO.succeed(BadRequestResponse(error))
-    //       case Right(value) =>
-    //         for {
-    //           findResult <- UserService.findReservationsByUser(value)
-
-    //           result <- findResult match {
-    //             case Left(error) => ZIO.succeed(BadRequestResponse(error))
-    //             case Right(reservations) =>
-    //               ZIO.succeed(Response.json(reservations.toJson))
-    //           }
-    //         } yield result
-    //     }
-
-    //   } yield response
   }
 
-  private def parseUserData(queryParams: Either[String, QueryParams]) = for {
-    result <- ZIO.attempt(
-      queryParams match {
-        case Left(error) => Left(error)
-        case Right(params) =>
-          for {
-            name <- params.get("name") match {
-              case None => Left("이름을 입력해주세요.")
-              case Some(nameParam) =>
-                nameParam.headOption match {
-                  case None        => Left("이름을 입력해주세요.")
-                  case Some(value) => Right(value)
-                }
-            }
-            phone <- params.get("phone") match {
-              case None => Left("전화번호 뒷자리를 입력해주세요.")
-              case Some(nameParam) =>
-                nameParam.headOption match {
-                  case None        => Left("전화번호 뒷자리를 입력해주세요.")
-                  case Some(value) => Right(value)
-                }
-            }
-          } yield (name, phone)
-      }
-    )
+  private def parseUserData(userData: Either[String, QueryParams]) = for {
+    result <- userData match {
+      case Left(error) => Left(error)
+      case Right(data) =>
+        for {
+          name <- parseParam(data, "name")
+          phone <- parseParam(data, "phone")
+        } yield User(name, phone)
+    }
   } yield result
 
-  private def login(queryParams: QueryParams) = for {
-    nonEmptyParams <- queryParams.isEmpty match {
-      case true  => ZIO.left("사용자 정보를 입력해주세요.")
-      case false => ZIO.right(queryParams)
+  private def parseParam(queryParams: QueryParams, parameter: String) = for {
+    result <- queryParams.get(parameter) match {
+      case None => Left(s"다음 정보를 입력해주세요: ${parameter}")
+      case Some(param) =>
+        param.headOption match {
+          case None        => Left(s"다음 정보를 입력해주세요: ${parameter}")
+          case Some(value) => Right(value)
+        }
     }
-
-    userData <- parseUserData(nonEmptyParams)
-
-    user <- UserService.login(userData)
-
-  } yield user
+  } yield result
 
   private def BadRequestResponse(errorMessage: String) =
     Response
