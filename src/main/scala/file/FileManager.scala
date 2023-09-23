@@ -7,6 +7,7 @@ object FileManager {
 
   val FILE_RESERVATION = "reservation.json"
   val FILE_REVIEW = "review.json"
+  val FILE_USER = "user.json"
 
   val path = os.pwd / "src" / "resources"
 
