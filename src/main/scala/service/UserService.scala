@@ -31,22 +31,28 @@ object UserService {
     users <- FileManager.readJson[User](FILE_USER)
   } yield users
 
-  private def findReservationById(id : Int) = for{
-      reservations <- FileManager.readJson[Reservation](
-        FileManager.FILE_RESERVATION
-    )
-     targetReservation = reservations.filter(r => r.id == id)
-  } yield ()
+  def checkIfReviewHasCreatedById(id : Int) = for{
+      reviews <- getReviews()
+      isExistReview = reviews.exists(r => r.reservation_id == id)
+  } yield isExistReview
 
 
-  private def checkIfReservationExistById(targetId : Int) = for{
-      reservations <- FileManager.readJson[Reservation](
-        FileManager.FILE_RESERVATION
-    )
+  private def getPaidButNotReviewedReservationById(id : Int) = for{
+    reservations <- getReservations().map(r => r.filter(item => item.id == id))
 
-    isExist = reservations.exists(r=> r.id == targetId)
-    
-  } yield isExist
+    paidReservation <- reservations match {
+      case Nil => ZIO.fail("ID에 해당하는 예약을 찾을 수 없습니다.")
+      case reservation :: Nil if reservation.isPaied == true => ZIO.succeed(reservation)
+      case reservation :: Nil if reservation.isPaied == false => ZIO.fail("결제가 완료되지 않은 예약입니다.")
+      case _ :: _ => ZIO.fail("동일한 ID로 여러 개의 예약이 조회됩니다.")
+    }
+    pendingReservation <- paidReservation match {
+      case pendingReservation if checkIfReviewHasCreatedById(pendingReservation.id) == true => ZIO.succeed(pendingReservation)
+      case pendingReservation if checkIfReviewHasCreatedById(pendingReservation.id) == false => ZIO.fail("이미 리뷰를 작성한 예약입니다.")
+    }
+
+
+  } yield pendingReservation
 
 
   private def addUser(user: User) = for {
@@ -63,13 +69,11 @@ object UserService {
 
   private def addReview(review: Review) = for {
     reviews <- getReviews()
-  // 이미 reservation id에 대한 리뷰가 존재하면
-    // 에러를 던져준다.
-    isExist <- checkIfReservationExistById(review.reservation_id)
-    nextReviews <- isExist match {
+    reservation <- getPaidButNotReviewedReservationById(review.reservation_id)
+    nextReviews <- reservation match {
       case true => ZIO.fail(s"이미 존재하는 리뷰가 있습니다.")
       case false => ZIO.succeed(reviews.appended(review))
-          }
+    }
     _ <- saveReview(nextReviews)
   } yield ()
 
@@ -104,15 +108,13 @@ object UserService {
 
   // ---- V 외부 공개 코드 V ----
 
-  def findReservationsByUser(user: Either[String, User]) = for {
-    users <- getUsers()
+  def findReservationsByUser(user: User) = for {
+    // TODO: reservation이 빈 List일 때 에러처리
     reservations <- getReservations()
 
-    result <- user match {
-      case Left(error) => ZIO.left(error)
-      case Right(data) =>
-        ZIO.right(reservations.filter(reservation => reservation.user == data))
-    }
+    result = reservations
+          .filter(reservation => user == reservation.user)
+
   } yield result
 
   // TODO: UUID 생성 관련 코드가 작성되고 나서 수정 예정
@@ -128,12 +130,11 @@ object UserService {
     _ <- addReservation(reservation)
 
   } yield reservation
-
   def pay(reservationId: Int) = for {
     reservations <- getReservations()
 
     changed = reservations.map { reservation =>
-      if (reservation.id == reservationId) reservation.copy(isPaied = true)
+      if (reservation.id == reservationId && reservation.isClosed == true) reservation.copy(isPaied = true)
       else reservation
     }
 
@@ -143,6 +144,7 @@ object UserService {
 
   } yield result
 
+  // 리뷰는 예약 1건 당 1개만 등록할 수 있다.
   def writeReview(reservationId: Int, point: Int, content: String) =
     for {
       _ <- ZIO.unit
