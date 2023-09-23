@@ -74,7 +74,7 @@ object UserService {
   } yield ()
 
 
-  def saveReview(nextReviews: List[Review]) = for {
+  private def saveReview(nextReviews: List[Review]) = for {
     _ <- FileManager.writeJson(FileManager.FILE_REVIEW, nextReviews)
   } yield ()
 
@@ -143,7 +143,7 @@ object UserService {
 
   } yield result
 
-  private def writeReview(reservationId: Int, point: Int, content: String) =
+  def writeReview(reservationId: Int, point: Int, content: String) =
     for {
       _ <- ZIO.unit
       review = Review(reservationId, point, content)
