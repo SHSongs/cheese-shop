@@ -31,6 +31,24 @@ object UserService {
     users <- FileManager.readJson[User](FILE_USER)
   } yield users
 
+  private def findReservationById(id : Int) = for{
+      reservations <- FileManager.readJson[Reservation](
+        FileManager.FILE_RESERVATION
+    )
+     targetReservation = reservations.filter(r => r.id == id)
+  } yield ()
+
+
+  private def checkIfReservationExistById(targetId : Int) = for{
+      reservations <- FileManager.readJson[Reservation](
+        FileManager.FILE_RESERVATION
+    )
+
+    isExist = reservations.exists(r=> r.id == targetId)
+    
+  } yield isExist
+
+
   private def addUser(user: User) = for {
     users <- getUsers()
 
@@ -45,13 +63,24 @@ object UserService {
 
   private def addReview(review: Review) = for {
     reviews <- getReviews()
-
-    nextReviews = reviews.appended(review)
-
-    _ <- FileManager.writeJson(FILE_REVIEW, nextReviews)
+  // 이미 reservation id에 대한 리뷰가 존재하면
+    // 에러를 던져준다.
+    isExist <- checkIfReservationExistById(review.reservation_id)
+    nextReviews <- isExist match {
+      case true => ZIO.fail(s"이미 존재하는 리뷰가 있습니다.")
+      case false => ZIO.succeed(reviews.appended(review))
+          }
+    _ <- saveReview(nextReviews)
   } yield ()
 
+
+  def saveReview(nextReviews: List[Review]) = for {
+    _ <- FileManager.writeJson(FileManager.FILE_REVIEW, nextReviews)
+  } yield ()
+
+
   // ---- V 단순 매핑 코드 V ----
+
 
   private def doesUserExists(user: User) = for {
     users <- getUsers()
