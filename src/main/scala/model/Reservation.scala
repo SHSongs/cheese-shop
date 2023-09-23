@@ -3,7 +3,7 @@ package model
 import zio.json.{DeriveJsonCodec, JsonCodec}
 
 case class Reservation(
-    id: Int,
+    id: String,
     user: User,
     date: String,
     time: String,
@@ -21,6 +21,8 @@ case class Reservation(
     this.isPaied
   )
 }
+
+case class ReservationData(user: User, date: String, time: String, guests: Int)
 
 object Reservation {
   implicit val codec: JsonCodec[Reservation] = DeriveJsonCodec.gen[Reservation]
