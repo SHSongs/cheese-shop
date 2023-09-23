@@ -4,44 +4,60 @@ import zio._
 import zio.http._
 import zio.json.EncoderOps
 
-import model.{ExistingUser, NewUser}
 import service.UserService
+import model._
 
 object UserController {
   def apply() = Http.collectZIO[Request] {
-    case req @ (Method.GET -> Root / "user") =>
+    case req @ (Method.GET -> Root / "user" / "reservations") =>
       for {
-        _ <- Console.printLine("/user endpoint!")
-        noQueryParams = req.url.queryParams.isEmpty
+        _ <- Console.printLine("/user/reservations endpoint!")
+        queryParams = req.url.queryParams
 
-        userResponse <- noQueryParams match {
-          case true  => ZIO.succeed(Response.status(Status.BadRequest))
-          case false => login(req.url.queryParams)
+        userData = queryParams.isEmpty match {
+          case true  => Left("회원 정보를 입력해주세요.")
+          case false => Right(queryParams)
         }
 
-        result = userResponse.addHeader(
-          Header
-            .ContentType(MediaType.text.plain, None, Some(Charsets.Utf8))
-        )
+        user = parseUserData(userData)
 
-      } yield result
+        result <- UserService.findReservationsByUser(user)
+
+        response <- result match {
+          case Left(error)  => ZIO.succeed(BadRequestResponse(error))
+          case Right(value) => ZIO.succeed(Response.json(value.toJson))
+        }
+
+      } yield response
   }
 
-  private def login(queryParams: QueryParams) = for {
-    paramName <- ZIO.fromOption(queryParams.get("name"))
-    paramPhone <- ZIO.fromOption(queryParams.get("phone"))
-
-    name = paramName.head
-    phone = paramPhone.head
-
-    user <- UserService.login(name, phone)
-
-    result <- user match {
-      case ExistingUser(name, _) =>
-        ZIO.succeed(Response.text(s"${name}님은 기존 사용자입니다."))
-      case NewUser(name, _) =>
-        ZIO.succeed(Response.text(s"${name}님은 새로운 사용자입니다."))
+  private def parseUserData(userData: Either[String, QueryParams]) = for {
+    result <- userData match {
+      case Left(error) => Left(error)
+      case Right(data) =>
+        for {
+          name <- parseParam(data, "name")
+          phone <- parseParam(data, "phone")
+        } yield User(name, phone)
     }
-
   } yield result
+
+  private def parseParam(queryParams: QueryParams, parameter: String) = for {
+    result <- queryParams.get(parameter) match {
+      case None => Left(s"다음 정보를 입력해주세요: ${parameter}")
+      case Some(param) =>
+        param.headOption match {
+          case None        => Left(s"다음 정보를 입력해주세요: ${parameter}")
+          case Some(value) => Right(value)
+        }
+    }
+  } yield result
+
+  private def BadRequestResponse(errorMessage: String) =
+    Response
+      .text(errorMessage)
+      .withStatus(Status.BadRequest)
+      .addHeader(
+        Header.ContentType(MediaType.text.plain, None, Some(Charsets.Utf8))
+      )
 }
