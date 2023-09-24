@@ -14,15 +14,19 @@ object OwnerController {
           reservations <- OwnerService.getReservations()
           res <- ZIO.succeed(Response.json(reservations.toJson))
         } yield res
-      case Method.PUT -> Root / "owner" / "reservations" / reservationId => for {
-        _ <- zio.Console.printLine(s"/owner/reservations/${reservationId} endpoint!")
-        data <- OwnerService.closeReservation(Integer.parseInt(reservationId))
-        res <- ZIO.succeed(Response.json(data.toJson))
-      } yield res
-      case Method.GET -> Root / "owner" / "reviews" => for {
-        _ <- zio.Console.printLine(s"/owner/reviews endpoint!")
-        reviews <- OwnerService.getReviews()
-        res <- ZIO.succeed(Response.json(reviews.toJson))
-      } yield res
+      case Method.PUT -> Root / "owner" / "reservations" / reservationId =>
+        for {
+          _ <- zio.Console.printLine(
+            s"/owner/reservations/${reservationId} endpoint!"
+          )
+          data <- OwnerService.closeReservation(reservationId)
+          res <- ZIO.succeed(Response.json(data.toJson))
+        } yield res
+      case Method.GET -> Root / "owner" / "reviews" =>
+        for {
+          _ <- zio.Console.printLine(s"/owner/reviews endpoint!")
+          reviews <- OwnerService.getReviews()
+          res <- ZIO.succeed(Response.json(reviews.toJson))
+        } yield res
     }
 }

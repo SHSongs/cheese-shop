@@ -9,7 +9,7 @@ object OwnerService {
     reservations <- FileManager.readJson[Reservation](FILE_RESERVATION)
   } yield reservations
 
-  def closeReservation(reservationId: Int) = for {
+  def closeReservation(reservationId: String) = for {
     reservations <- getReservations()
     changedList = reservations.map { reservation =>
       if (reservationId == reservation.id) {
