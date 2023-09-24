@@ -1,1 +1,1 @@
-[{"id":1,"user":{"name":"윤채은","phone":"1234"},"date":"20230919","time":"1500","guests":"4","isClosed":true,"isPaied":false},{"id":2,"user":{"name":"서윤지","phone":"2424"},"date":"20230918","time":"1500","guests":"100","isClosed":false,"isPaied":false}]
+[{"id":"1","user":{"name":"윤채은","phone":"1234"},"date":"20230919","time":"1500","guests":4,"isClosed":true,"isPaied":false},{"id":"2","user":{"name":"서윤지","phone":"2424"},"date":"20230918","time":"1500","guests":100,"isClosed":false,"isPaied":false}]
