@@ -4,7 +4,7 @@ import zio.http._
 
 object Main extends ZIOAppDefault {
 
-  val app =
+  val helloApp =
     Http.collectZIO[Request] { case Method.GET -> Root =>
       for {
         _ <- zio.Console.printLine("/ endpoint!")
@@ -12,7 +12,7 @@ object Main extends ZIOAppDefault {
       } yield res
     }
 
-  val apps = OwnerController() ++ UserController() ++ SampleController() ++ app
+  val apps = OwnerController() ++ UserController() ++ SampleController() ++ helloApp
 
   override val run =
     Server
