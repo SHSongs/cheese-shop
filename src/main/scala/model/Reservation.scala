@@ -3,13 +3,13 @@ package model
 import zio.json.{DeriveJsonCodec, JsonCodec}
 
 case class Reservation(
-    id: String,
-    user: User,
-    date: String,
-    time: String,
-    guests: Int,
-    isClosed: Boolean = false,
-    isPaied: Boolean = false
+                        id: String,
+                        user: User,
+                        date: String,
+                        time: String,
+                        guests: Int,
+                        isClosed: Boolean = false,
+                        isPaid: Boolean = false
 ) {
   def close() = Reservation(
     this.id,
@@ -18,7 +18,7 @@ case class Reservation(
     this.time,
     this.guests,
     true,
-    this.isPaied
+    this.isPaid
   )
 }
 
