@@ -20,9 +20,8 @@ object OwnerTest extends ZIOSpecDefault {
     test("사장님은 예약을 종료할 수 있다.") {
       for {
         response <- Main.apps.runZIO(Request.put(Body.empty, URL(Root / "owner" / "reservations" / "1")))
-        _ = assertTrue(response.status == Status.Ok)
         result <- response.body.asString.map(_.fromJson[Reservation])
-      } yield assertTrue(result.isRight)
+      } yield assertTrue(result.isRight && response.status == Status.Ok)
     }
   )
 }
