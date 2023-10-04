@@ -21,7 +21,8 @@ object OwnerTest extends ZIOSpecDefault {
       for {
         response <- Main.apps.runZIO(Request.put(Body.empty, URL(Root / "owner" / "reservations" / "1")))
         result <- response.body.asString.map(_.fromJson[Reservation])
-      } yield assertTrue(result.isRight && response.status == Status.Ok)
+      } yield assertTrue(result.isRight) &&
+        assertTrue(response.status == Status.Ok)
     }
   )
 }
