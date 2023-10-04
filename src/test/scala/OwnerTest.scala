@@ -3,14 +3,8 @@ import zio.test._
 import zio.http.{Root, _}
 import zio.json.{DecoderOps, EncoderOps, JsonEncoder}
 
-object MySuite extends ZIOSpecDefault {
-  def spec = suite("MySuite")(
-    test("root로 요청을 보내면 Hello World! 를 body로 응답한다") {
-      for {
-        response <- Main.helloApp.runZIO(Request.get(URL(Root)))
-        result <- response.body.asString
-      } yield assertTrue(result == "Hello World!")
-    },
+object OwnerTest extends ZIOSpecDefault {
+  def spec = suite("Owner에 대한 E2E Test")(
     test("사장님은 모든 예약 목록을 확인할 수 있다") {
       for {
         response <- Main.apps.runZIO(Request.get(URL(Root / "owner" / "reservations")))
