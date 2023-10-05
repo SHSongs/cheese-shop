@@ -12,7 +12,7 @@ object Main extends ZIOAppDefault {
       } yield res
     }
 
-  val apps = OwnerController() ++ UserController() ++ SampleController() ++ helloApp
+  val apps = OwnerController() ++ UserController() ++ helloApp
 
   override val run =
     Server
