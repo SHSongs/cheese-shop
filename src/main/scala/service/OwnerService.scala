@@ -1,11 +1,9 @@
 package service
 
-import file.FileManager
-import file.FileManager._
-import model._
+import repository._
 
 object OwnerService {
-  def getReservations() = FileManager.readJson[Reservation](FILE_RESERVATION)
+  def getReservations() = ReservationRepository.getReservations()
 
   def closeReservation(reservationId: String) = for {
     reservations <- getReservations()
@@ -16,9 +14,9 @@ object OwnerService {
         reservation
       }
     }
-    _ <- FileManager.writeJson(FILE_RESERVATION, changedList)
+    _ <- ReservationRepository.saveReservations(changedList)
     changedReservation = changedList.filter(r => r.id == reservationId)
   } yield changedReservation.head
 
-  def getReviews() = FileManager.readJson[Review](FILE_REVIEW)
+  def getReviews() = ReviewRepository.getReviews()
 }
